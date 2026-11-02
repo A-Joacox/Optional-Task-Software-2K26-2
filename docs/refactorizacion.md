@@ -1,7 +1,7 @@
 # 5. Refactorización
 
 - **Revisión inicial (antes de refactorizar):** `1200e73`. Es el código de `969cbdb` más las pruebas de la parte 2.
-- **Revisión final:** el commit que incluya este documento.
+- **Revisión final:** `57a54df`.
 - **Archivo refactorizado:** `app/orders.py`, de 235 a 223 líneas. `app/customers.py`, `app/products.py`, `app/database.py` y `main.py` no cambian.
 
 Se aplicaron cuatro técnicas del catálogo de Fowler (*Refactoring*, 2.ª ed.). Se mantienen las rutas, los cuerpos y códigos HTTP, los mensajes de error y su orden de evaluación, las reglas de negocio, el esquema SQLite y la transacción única por operación. Los smells mencionados están descritos en [code-smells.md](code-smells.md).
@@ -224,11 +224,13 @@ def create_order(data: OrderInput, request: Request):
 py -m uv run pytest --cov --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=80
 ```
 
-| | Revisión inicial `1200e73` | Refactorizada |
+| | Código inicial (`app/` de `1200e73`) | Refactorizado (`57a54df`) |
 | --- | --- | --- |
 | Pruebas | 96 aprobadas | 101 aprobadas |
 | Cobertura total | 99,67 % (302/303) | 99,66 % (289/290) |
 | `app/orders.py` | 163 sentencias, 100 % | 150 sentencias, 100 % |
+
+El commit `1200e73` contiene 87 pruebas. Las 96 de la columna inicial incluyen la ampliación de `test_save_and_quote_apply_the_same_rules` hecha en la parte 4, que se ejecutó sobre el código inicial antes de refactorizar y quedó registrada en `57a54df`.
 
 Las pruebas se corrieron primero **sin modificarlas** contra el código refactorizado. Todas las pruebas HTTP, de persistencia y de validación pasaron. Solo fallaron, con `AttributeError: 'OrderService' object has no attribute 'save'`, las pruebas unitarias que llamaban directamente al método eliminado: `test_saved_order_stores_the_same_totals_as_the_quote` y los 18 casos de `test_save_and_quote_apply_the_same_rules`.
 

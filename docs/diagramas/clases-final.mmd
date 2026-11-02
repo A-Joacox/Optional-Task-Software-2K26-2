@@ -1,0 +1,86 @@
+---
+title: Diagrama de clases final (después de refactorizar)
+---
+classDiagram
+    direction TB
+
+    class BaseModel {
+        <<pydantic>>
+    }
+    class FastAPI {
+        <<FastAPI>>
+        +state.database: Database
+    }
+    class HTTPException {
+        <<FastAPI>>
+        +status_code: int
+        +detail: str
+    }
+    class Connection {
+        <<sqlite3>>
+    }
+
+    class Database {
+        +path: str
+        +connect() Iterator~Connection~
+        +initialize() None
+    }
+
+    class ProductInput {
+        +name: str
+        +price_cents: int
+        +stock: int
+    }
+    class CustomerInput {
+        +name: str
+        +email: EmailStr
+        +category: Literal["regular", "premium", "business"]
+    }
+    class ItemInput {
+        +product_id: int
+        +quantity: int
+    }
+    class OrderInput {
+        +customer_id: int
+        +address: str
+        +city: str
+        +postal_code: str
+        +shipping: Literal["pickup", "standard", "express"]
+        +items: list~ItemInput~
+        +unique_products() OrderInput
+    }
+
+    class OrderService {
+        +database: Database
+        +quote(data: OrderInput) dict
+        +create(data: OrderInput) dict
+        +update(order_id, data: OrderInput) dict
+        +get(order_id) dict
+        +list() list~dict~
+        +confirm(order_id) dict
+        +cancel(order_id) dict
+        +delete(order_id) None
+        +notifications(order_id) list~dict~
+        -_price(connection, data: OrderInput) tuple
+        -_order_values(data: OrderInput, category, totals)$ tuple
+        -_insert_lines(connection, order_id, lines)$ None
+        -_find_order(connection, order_id)$ Row
+        -_find_pending(connection, order_id, conflict_message) Row
+        -_detail(connection, order_id) dict
+    }
+
+    BaseModel <|-- ProductInput
+    BaseModel <|-- CustomerInput
+    BaseModel <|-- ItemInput
+    BaseModel <|-- OrderInput
+    OrderInput *-- "1..100" ItemInput : items
+
+    FastAPI --> "1" Database : state.database
+    OrderService --> "1" Database : database
+    Database ..> Connection : abre y confirma
+    OrderService ..> Connection : SQL sobre 5 tablas
+    OrderService ..> OrderInput : quote / create / update(data)
+    OrderService ..> HTTPException : lanza 404 / 409
+
+    note for OrderService "_price() usa la función de módulo calculate_totals(category, shipping, subtotal)<br>y las constantes DISCOUNT_PERCENT, FREE_SHIPPING_FROM_CENTS, STANDARD_SHIPPING_CENTS,<br>EXPRESS_SHIPPING_CENTS, PENDING, CONFIRMED y CANCELLED (app/orders.py; no son clases).<br>SQL sobre orders, order_items, customers, products y notifications."
+    note for Database "Las rutas de app/products.py y app/customers.py<br>usan Database directamente (no hay clase de servicio)."

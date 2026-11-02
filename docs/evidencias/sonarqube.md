@@ -79,4 +79,41 @@ El Quality Gate aprobó, pero no es la medida principal de esta entrega: el gate
 | [issues-sonar.png](capturas/issues-sonar.png) | Pestaña Issues sin hallazgos; en el pie, la versión v26.10.0.133078 |
 | [quality-profile.png](capturas/quality-profile.png) | Perfiles de Python: *Sonar way core* predeterminado, 232 reglas |
 
-El análisis final, después de refactorizar, se agregará con las mismas capturas.
+---
+
+## Análisis final (después de refactorizar, revisión `57a54df`)
+
+Mismo servidor, mismo perfil (*Sonar way core*), mismo Quality Gate y mismo script de análisis.
+
+| Métrica (Overall Code) | Inicial (`1200e73`) | Final (`57a54df`) |
+| --- | --- | --- |
+| Quality Gate | Passed | Passed |
+| Issues abiertos (Security / Reliability / Maintainability) | 0 / 0 / 0 | 0 / 0 / 0 |
+| Security Hotspots | 0 | 0 |
+| Duplications | 0,0 % sobre 481 líneas | 0,0 % sobre 469 líneas |
+| Cobertura en pytest | 99,67 % (302/303) | 99,66 % (289/290) |
+| Cobertura en SonarQube | 99,7 % sobre 303 líneas | 99,7 % sobre 290 líneas |
+| Líneas de código (ncloc) | 393 | 370 |
+| Advertencias del análisis | Cobertura de `main.py` (corregida) y *blame* en 7 archivos | Ninguna |
+| Pruebas que generaron `coverage.xml` | 87 | 101 |
+
+**Código nuevo del análisis final** (New Code, desde el 2 de noviembre de 2026; corresponde a las líneas cambiadas por la refactorización):
+
+| Métrica | Valor | Condición del Quality Gate |
+| --- | --- | --- |
+| New issues | 0 | = 0 |
+| Coverage | 100 % sobre 72 líneas nuevas | ≥ 80,0 % |
+| Duplications | 0,0 % sobre 696 líneas nuevas | ≤ 3,0 % |
+
+Estas condiciones son las del Quality Gate predeterminado. Se evalúan **solo sobre el código nuevo**, por eso el gate no refleja la calidad del código heredado, que no cambió.
+
+**Interpretación.** SonarQube no cambia de veredicto, porque no reportaba nada antes de refactorizar. La mejora no se ve en sus métricas: el perfil no evalúa la duplicación de lógica ni los problemas de diseño que se corrigieron (ver [code-smells.md](../code-smells.md)). Lo que sí confirma el análisis final es que la refactorización no introdujo bugs, vulnerabilidades ni issues de mantenibilidad, y que la cobertura se mantuvo. La reducción de `app/orders.py` (de 163 a 150 sentencias) se refleja en las líneas por cubrir (de 303 a 290) y en las líneas de código (de 393 a 370).
+
+El summary también muestra el aviso *Limited security analysis*: SonarQube Community Build no analiza vulnerabilidades de inyección (SQL injection, XSS). El 0 en Security vale dentro de ese alcance. En este código, las consultas SQL usan parámetros `?` en lugar de concatenar valores.
+
+| Captura | Contenido |
+| --- | --- |
+| [sonar-summary-final.png](capturas/sonar-summary-final.png) | Summary del análisis final, Overall Code |
+| [sonar-newcode-final.png](capturas/sonar-newcode-final.png) | Summary del análisis final, New Code: 370 líneas de código y condiciones del Quality Gate |
+| [sonar-issues-final.png](capturas/sonar-issues-final.png) | Pestaña Issues sin hallazgos |
+| [pytest-evidencia-final.png](capturas/pytest-evidencia-final.png) | 101 pruebas aprobadas y cobertura del 99,66 % |
