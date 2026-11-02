@@ -1,0 +1,44 @@
+### POST /customers
+Cuerpo: {"name":"Ana Torres","email":"ana@example.com","category":"premium"}
+{"id":1,"name":"Ana Torres","email":"ana@example.com","category":"premium"}
+HTTP 201
+
+### POST /products
+Cuerpo: {"name":"Libro de algoritmos","price_cents":2500,"stock":5}
+{"id":1,"name":"Libro de algoritmos","price_cents":2500,"stock":5}
+HTTP 201
+
+### POST /orders/quote
+Cuerpo: {"customer_id":1,"address":"Av. Primavera 100","city":"Lima","postal_code":"15001","shipping":"standard","items":[{"product_id":1,"quantity":2}]}
+{"subtotal_cents":5000,"discount_cents":500,"shipping_cents":1000,"total_cents":5500}
+HTTP 200
+
+### POST /orders
+Cuerpo: {"customer_id":1,"address":"Av. Primavera 100","city":"Lima","postal_code":"15001","shipping":"standard","items":[{"product_id":1,"quantity":2}]}
+{"id":1,"customer_id":1,"status":"pending","customer_category":"premium","address":"Av. Primavera 100","city":"Lima","postal_code":"15001","shipping":"standard","subtotal_cents":5000,"discount_cents":500,"shipping_cents":1000,"total_cents":5500,"items":[{"product_id":1,"quantity":2,"unit_price_cents":2500}]}
+HTTP 201
+
+### POST /orders/1/confirm
+{"id":1,"status":"confirmed","message":"Pedido 1 confirmado. Total: 5500 centavos."}
+HTTP 200
+
+### GET /products/1
+{"id":1,"name":"Libro de algoritmos","price_cents":2500,"stock":3}
+HTTP 200
+
+### GET /orders/1/notifications
+[{"id":1,"order_id":1,"recipient":"ana@example.com","message":"Pedido 1 confirmado. Total: 5500 centavos."}]
+HTTP 200
+
+### POST /orders/1/confirm
+{"detail":"El pedido ya no está pendiente"}
+HTTP 409
+
+### GET /products/1
+{"id":1,"name":"Libro de algoritmos","price_cents":2500,"stock":3}
+HTTP 200
+
+### GET /orders/1
+{"id":1,"customer_id":1,"status":"confirmed","customer_category":"premium","address":"Av. Primavera 100","city":"Lima","postal_code":"15001","shipping":"standard","subtotal_cents":5000,"discount_cents":500,"shipping_cents":1000,"total_cents":5500,"items":[{"product_id":1,"quantity":2,"unit_price_cents":2500}]}
+HTTP 200
+
