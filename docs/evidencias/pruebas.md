@@ -44,6 +44,8 @@ Cada prueba usa su propia base SQLite en `tmp_path` y crea sus propios datos (`t
 
 - `test_persistence.py`: creación de la carpeta de la base, commit y rollback de `Database.connect`, claves foráneas activas, datos que sobreviven a un reinicio, `LAB_DB_PATH` y la respuesta `503` cuando SQLite no está disponible.
 
+Durante la parte 4, `test_save_and_quote_apply_the_same_rules` se amplió con un subtotal por encima del umbral de envío gratis (precio unitario 6000), porque con el precio 3333 no detectaba un cambio del umbral aplicado solo en `quote`. Desde entonces la suite tiene **96 pruebas**; la cobertura no cambia (99,67 %). Ver [code-smells.md](../code-smells.md), smell 1.
+
 No se excluyó código ni se redujo la meta. La configuración de coverage se ajustó solo para que SonarQube resuelva la ruta de `main.py`; los archivos medidos son los mismos (ver [sonarqube.md](sonarqube.md)).
 
 ## Capturas

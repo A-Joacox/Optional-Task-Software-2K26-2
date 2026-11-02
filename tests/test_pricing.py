@@ -1,8 +1,11 @@
 """Pruebas unitarias de las reglas de precio: usan OrderService y la base directamente, sin HTTP."""
+from typing import get_args
+
 import pytest
 from fastapi import HTTPException
 
-from app.orders import ItemInput, OrderInput, OrderService
+from app.customers import CustomerInput
+from app.orders import DISCOUNT_PERCENT, OrderInput, OrderService, calculate_totals
 
 
 def insert_customer(database, category):
@@ -78,8 +81,9 @@ def test_quote_does_not_reserve_stock(database):
 def test_saved_order_stores_the_same_totals_as_the_quote(database):
     customer_id = insert_customer(database, "premium")
     product_id = insert_product(database, 2500)
-    items = [ItemInput(product_id=product_id, quantity=2)]
-    order = OrderService(database).save(customer_id, "Calle 10", "Lima", "15001", "express", items)
+    data = OrderInput(customer_id=customer_id, address="Calle 10", city="Lima", postal_code="15001",
+                      shipping="express", items=[{"product_id": product_id, "quantity": 2}])
+    order = OrderService(database).create(data)
     assert order["status"] == "pending"
     assert order["customer_category"] == "premium"
     assert (order["subtotal_cents"], order["discount_cents"], order["shipping_cents"], order["total_cents"]) == (
@@ -89,15 +93,33 @@ def test_saved_order_stores_the_same_totals_as_the_quote(database):
 
 @pytest.mark.parametrize("category", ["regular", "premium", "business"])
 @pytest.mark.parametrize("shipping", ["pickup", "standard", "express"])
-def test_save_and_quote_apply_the_same_rules(database, category, shipping):
+@pytest.mark.parametrize("unit_price", [3333, 6000])
+def test_create_and_quote_apply_the_same_rules(database, category, shipping, unit_price):
     customer_id = insert_customer(database, category)
-    product_id = insert_product(database, 3333)
+    product_id = insert_product(database, unit_price)
     data = OrderInput(customer_id=customer_id, address="Calle 10", city="Lima", postal_code="15001",
                       shipping=shipping, items=[{"product_id": product_id, "quantity": 2}])
     service = OrderService(database)
     quoted = service.quote(data)
-    saved = service.save(customer_id, data.address, data.city, data.postal_code, shipping, data.items)
+    saved = service.create(data)
     assert {key: saved[key] for key in quoted} == quoted
+
+
+@pytest.mark.parametrize(("category", "shipping", "subtotal", "expected"), [
+    ("regular", "standard", 9999, (0, 1000, 10999)),
+    ("premium", "standard", 10000, (1000, 0, 9000)),
+    ("business", "express", 999, (149, 2500, 3350)),
+    ("premium", "pickup", 999, (99, 0, 900)),
+])
+def test_calculate_totals_without_database(category, shipping, subtotal, expected):
+    assert calculate_totals(category, shipping, subtotal) == {
+        "subtotal_cents": subtotal, "discount_cents": expected[0], "shipping_cents": expected[1],
+        "total_cents": expected[2]}
+
+
+def test_every_customer_category_has_a_discount():
+    categories = get_args(CustomerInput.model_fields["category"].annotation)
+    assert set(DISCOUNT_PERCENT) == set(categories)
 
 
 def test_quote_rejects_unknown_customer_and_product(database):
